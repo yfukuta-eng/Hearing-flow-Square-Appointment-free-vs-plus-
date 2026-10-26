@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Square予約 Free/Plus ヒアリングフロー</title>
+<style>
+:root{color-scheme:light dark;--bg:#faf9f5;--surface:#ffffff;--surface-1:#f1efe8;--text:#1f1e1d;--text-2:#5f5e5a;--text-3:#888780;--border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.3);--acc-bg:#e6f1fb;--acc-fg:#0c447c;--acc-bd:#85b7eb;--ok-bg:#eaf3de;--ok-fg:#27500a;--warn-bg:#faeeda;--warn-fg:#633806}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1e1d;--surface:#2a2928;--surface-1:#353432;--text:#f1efe8;--text-2:#b4b2a9;--text-3:#888780;--border:rgba(255,255,255,.14);--border-strong:rgba(255,255,255,.35);--acc-bg:#0c447c;--acc-fg:#b5d4f4;--acc-bd:#378add;--ok-bg:#27500a;--ok-fg:#c0dd97;--warn-bg:#633806;--warn-fg:#fac775}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Hiragino Sans","Yu Gothic UI","Noto Sans JP",Meiryo,sans-serif;line-height:1.7}
+main{max-width:760px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:20px;font-weight:500;margin:0 0 4px}
+.lead{font-size:13px;color:var(--text-2);margin:0 0 20px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--acc-bd);outline-offset:2px}
+.st{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;border-radius:8px;border:1px solid var(--border-strong);background:transparent}
+.st:hover{background:var(--surface-1)}
+.st .n{width:20px;height:20px;border-radius:50%;background:var(--surface-1);display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none}
+.st.on{background:var(--acc-bg);color:var(--acc-fg);border-color:var(--acc-bd)}
+.st.on .n{background:var(--surface);color:var(--acc-fg)}
+#panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px}
+.q{border-top:1px solid var(--border)}
+.qb{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;padding:10px 4px;border:none;background:transparent;font-size:14px;border-radius:0}
+.qb:hover{background:var(--surface-1)}
+.qd{padding:0 4px 12px;font-size:13px;color:var(--text-2)}
+.qd b{font-weight:500;color:var(--text)}
+.bd{font-size:12px;padding:2px 10px;border-radius:8px}
+.nav button{padding:6px 16px;border:1px solid var(--border-strong);border-radius:8px;background:transparent}
+.nav button:hover{background:var(--surface-1)}
+@media (prefers-reduced-motion:no-preference){.qd{animation:fade .15s ease-out}@keyframes fade{from{opacity:0}to{opacity:1}}}
+</style>
+</head>
+<body>
+<main>
+<h1>Square予約 Free/Plus ヒアリングフロー</h1>
+<p class="lead">ステップを選ぶと質問一覧が開き、質問をクリックすると狙いと深掘りが表示されます。</p>
+<div id="steps" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px"></div>
+<div id="panel"></div>
+<p class="lead" style="margin-top:16px">※判断の目安は仮説です。プランの仕様・料金は公式ヘルプで確認してください。</p>
+</main>
+<script>
+const P=[
+{t:"事業の基本",p:"業態と規模を把握し、以降の質問の前提をそろえる",q:[
+["どんな業種・サービスですか？","業態でクラス運用の型が決まる","ヨガ、料理、習い事など。オンライン併用の有無"],
+["店舗型・出張型・オンラインのどれですか？","場所の制約と予約枠の考え方が変わる","スタジオなど会場側の定員制限"],
+["予約を受ける講師・スタッフは何名ですか？","スタッフ追加の運用が現実的か判断する","実在の担当者と、予約枠用の追加スタッフを区別して聞く"]]},
+{t:"クラス・予約の運用",p:"定員・回数・参加人数を数字で把握し、必要な枠の規模を見積もる",q:[
+["1回のクラスの定員は何名ですか？","同時予約ニーズの規模感をつかむ","最大定員と、実際に集まる人数を分けて聞く"],
+["週・月に何クラス開催しますか？","枠の設定・管理にかかる工数を見積もる","曜日・時間帯が固定かどうか"],
+["開催日時は固定ですか、毎回変わりますか？","枠設定の手間と変更頻度を知る","臨時開催や休講の頻度"],
+["平均と最大で何名参加しますか？","定員と実態のギャップを確認する","満席が常態か、空きが多いか"],
+["満席やお断りはどのくらいありますか？","取りこぼしの損失を確認する","月に何回、何名分くらいか"]]},
+{t:"同時予約のニーズ",core:1,p:"FreeかPlusかを分ける中心の質問。希望する運用を具体的に引き出す",q:[
+["同じ時間に最大何名まで受け付けたいですか？","同時定員の必要数がプラン判断の軸になる","「複数名」ではなく人数で。現状との差も聞く"],
+["1回の予約で複数名分をまとめて取りたい場面はありますか？","家族・友人など、まとめ予約の要否を確認する","どんな場面で必要か、まで一段深掘りする"],
+["定員を超えた予約を防ぐ仕組みは必要ですか？","自動で受付を止める必要性を確認する","現在は手作業で止めているか"],
+["クラスごと、または回ごとに定員が違いますか？","定員設定の柔軟さが必要かを見る","変動が頻繁だと管理負担が増える"]]},
+{t:"スタッフ・担当者",p:"担当者まわりの運用が、スタッフ追加方式で成り立つかを確認する",q:[
+["お客様に担当者を選んでもらう運用ですか？","予約画面でスタッフ名が見える運用との相性を確認","選ばせたいか、選ばせたくないか"],
+["スタッフごとに勤務時間やシフトは違いますか？","スタッフ別の営業時間設定の手間を見積もる","追加したスタッフ分の設定も必要になる点に注意"],
+["今後スタッフを増やす予定はありますか？","将来の管理の複雑さを予測する","実在スタッフと枠用スタッフが混在しないか"],
+["スタッフ別の売上や予約実績を見たいですか？","レポートの見やすさへの影響を確認する","枠用スタッフが混ざると実績が分かりにくくなる可能性"]]},
+{t:"現状と困りごと",p:"今のやり方と困りごとから、解決したい本当の課題を特定する",q:[
+["今は予約をどう受けていますか？","乗り換え元と、移行時の手間を把握する","電話、LINE、Instagram、紙、他の予約ツールなど"],
+["いちばん手間なこと、困っていることは何ですか？","優先して解決すべき課題を知る","具体的な場面と頻度を聞く"],
+["ダブルブッキングや連絡漏れはありましたか？","現状の運用リスクを確認する","いつ、どのくらいの頻度で起きたか"],
+["予約管理に1週間でどのくらい時間をかけていますか？","工数削減の価値を試算する材料にする","費用対効果の説明に使う"]]},
+{t:"必要な機能",p:"定員以外に必須の機能があるかを確認し、プランの選択肢を絞る",q:[
+["事前決済（オンライン決済）は必要ですか？","決済機能の要否を確認する","現状は当日払いか、事前払いか"],
+["キャンセルポリシーを設定したいですか？","期限やキャンセル料の運用を確認する","無断キャンセルの悩みの有無"],
+["リマインド通知は必要ですか？","欠席・遅刻対策のニーズを確認する","現在は手動で連絡しているか"],
+["顧客情報（来店履歴・メモ）を管理したいですか？","顧客管理機能の要否を確認する","現在の管理方法（紙、表計算など）"],
+["Googleカレンダーなど他のカレンダーと連携したいですか？","外部連携の要否を確認する","個人の予定との重複防止が目的か"],
+["すでにSquareのレジや決済を使っていますか？","既存のSquare環境との連携メリットを確認する","売上・顧客データを一元化したいか"]]},
+{t:"将来と費用感",p:"今後の拡大計画と予算感から、いま必要なプランか将来を見据えるかを判断する",q:[
+["半年から1年後に、クラス数や定員を増やす予定はありますか？","今のプランで足りるか、将来を見据えるかを判断する","具体的な数字と時期"],
+["予約システムにかけられる月額の目安はありますか？","価格への許容度を把握する","「いくらなら納得か」を聞くと答えやすい"],
+["まず無料で試したい気持ちはどのくらい強いですか？","導入ハードルとスモールスタートの希望を確認する","後から切り替えられる点の説明が有効かを検討"]]},
+{t:"意思決定",p:"決裁者と迷いどころを聞き、次のアクションにつなげる",q:[
+["導入を決めるのはどなたで、いつ頃までに決めたいですか？","決裁者とスケジュールを把握する","本人が決めるのか、他の人の承認が要るのか"],
+["迷っている点は何ですか？（料金、機能、設定の難しさなど）","不安の中心を知り、提案の焦点を絞る","一番の懸念を一つ選んでもらう"],
+["ほかに比較しているサービスはありますか？","競合との比較軸を把握する","何を重視して比べているか"]]},
+{t:"判断の目安",verdict:1,p:"ヒアリング結果を3つの傾向に当てはめる。仮説なので、公式の仕様で裏づけを取って確定する"}
+];
+let cur=0;const open={};
+function steps(){document.getElementById('steps').innerHTML=P.map((x,i)=>'<button class="st'+(i===cur?' on':'')+'" aria-pressed="'+(i===cur)+'" onclick="go('+i+')"><span class="n">'+(i+1)+'</span>'+x.t+'</button>').join('')}
+function verdict(){
+const c=[["Plusが合いやすい","同時定員が多い、または回ごとに変動する。将来クラスや定員を拡大する予定がある。"," var(--acc-bg)","var(--acc-fg)"],
+["Freeで足りる可能性","同時定員が少なく、クラス数も少ない。まず無料で始めたい。スタッフ追加の運用も選択肢になる。","var(--ok-bg)","var(--ok-fg)"],
+["スタッフ追加方式は注意","担当者別の売上管理を重視する。スタッフ別シフトが複雑。予約画面にスタッフ名が出ることが不都合。","var(--warn-bg)","var(--warn-fg)"]];
+return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:12px 0">'+c.map(x=>'<div style="background:'+x[2]+';color:'+x[3]+';border-radius:8px;padding:12px 14px"><div style="font-weight:500;font-size:14px">'+x[0]+'</div><div style="font-size:13px;margin-top:6px">'+x[1]+'</div></div>').join('')+'</div>'}
+function render(){
+const x=P[cur];let h='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:16px;font-weight:500">'+(cur+1)+'. '+x.t+'</span>';
+if(x.core)h+='<span class="bd" style="background:var(--warn-bg);color:var(--warn-fg)">判断の核心</span>';
+if(x.verdict)h+='<span class="bd" style="background:var(--surface-1);color:var(--text-2)">仮説</span>';
+h+='</div><p style="font-size:13px;color:var(--text-2);margin:6px 0 10px">'+x.p+'</p>';
+if(x.q){h+='<div style="font-size:12px;color:var(--text-3);margin-bottom:4px">質問をクリックすると狙いと深掘りが表示されます</div><div>';
+x.q.forEach((q,j)=>{const k=cur+'-'+j,o=open[k];
+h+='<div class="q"><button class="qb" aria-expanded="'+!!o+'" onclick="tg(\''+k+'\')"><span>'+q[0]+'</span><span aria-hidden="true" style="color:var(--text-3)">'+(o?'▴':'▾')+'</span></button>';
+if(o)h+='<div class="qd"><div><b>狙い</b>　'+q[1]+'</div><div><b>深掘り</b>　'+q[2]+'</div></div>';
+h+='</div>'});h+='</div>'}
+if(x.verdict)h+=verdict();
+h+='<div class="nav" style="display:flex;justify-content:space-between;margin-top:14px"><button onclick="go('+(cur-1)+')" '+(cur===0?'style="visibility:hidden"':'')+'>前へ</button><button onclick="go('+(cur+1)+')" '+(cur===P.length-1?'style="visibility:hidden"':'')+'>次へ</button></div>';
+document.getElementById('panel').innerHTML=h}
+function go(i){if(i<0||i>=P.length)return;cur=i;steps();render()}
+function tg(k){open[k]=!open[k];render()}
+steps();render();
+</script>
+</body>
+</html>
